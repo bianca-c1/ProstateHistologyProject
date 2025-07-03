@@ -11,6 +11,7 @@ import math
 import Utils
 from PIL import Image
 import sys
+import pprint
 
 t = time.time()
 
@@ -57,12 +58,6 @@ print("mask dimensions", time.time() - t)
 ######################################################
 ##### contour time don't touch anything above this!!!!
 ######################################################
-
-# maybe use something like this later if you need to distinguish the cancer by grade
-# annotation_dict = {
-#     "G3": 'brown', "G4": 'grey', "G5": 'black', "Atrophy": 'blue', "Margin": 'yellow', "EPE": 'light blue', "PIN": 'light green',
-#     "G3+4": 'green', "G4+3": 'purple', "G4+5": 'red', "G5+4": 'cyan', "G3+5": 'light grey', "G5+3": 'teal' }
-
 
 # groupby separates the df by annotation name (ex. G3 and Atrophy for A16)
 grouped = df2.groupby('Annotation Name')
@@ -141,27 +136,23 @@ for annotation_name, grouped_df in grouped:
 print("all contours! (grabbing + merging)", time.time()-t)
 
 #########################
-##### cancer detection!!
+##### cancer detection!! DON'T TOUCH ANYTHING ABOVE THIS !
 #########################
 
 #point = [6900,33000]
     #[19072,43678]   # this is a point inside G3 contour 2
     #[17750.0,44300.0] this is a point inside G3 contour 1
 
-new_mask = skimage.measure.block_reduce(mask,(512,512), np.mean)
-uint8_mask = (new_mask - new_mask.min()) / (new_mask.max() - new_mask.min())
-uint8_mask = (100*uint8_mask).astype(np.uint8)
+uint8_mask = skimage.measure.block_reduce(mask,(512,512), np.mean)
+#uint8_mask = (uint8_mask - uint8_mask.min()) / (uint8_mask.max() - uint8_mask.min())
+#uint8_mask = np.int8(uint8_mask)
+#uint8_mask = (uint8_mask).astype(np.uint8)
 
-# for row in uint8_mask:
-#     count3 = 0
-#     for point in row:
-#         for o in merged_contours:
-#             val = cv2.pointPolygonTest(np.array(o, dtype='float32'), point, measureDist = False)
-#             if val == 1.0:
-#                 check.append(count3)
-#         count3 += 1
+np.set_printoptions(suppress=True, threshold=sys.maxsize)
+print(uint8_mask)
+#print(mask)
 
-coord_list = np.argwhere(uint8_mask == 100)
+coord_list = np.argwhere(uint8_mask == 255)
 
 clean_coords = []
 for i in range(len(coord_list)):
@@ -170,7 +161,8 @@ for i in range(len(coord_list)):
     coords = [x, y]
     clean_coords.append(coords)
 
-#print(tuple(coord_list)[0][0])
+print(clean_coords)
+#print(tuple(coord_list)[0])
 
 #########################
 ##### showing the image!
@@ -179,38 +171,24 @@ for i in range(len(coord_list)):
 # img = Image.fromarray(uint8_mask)
 # img.save(r'E:\Users\bchiang\IGPC Raw Histology\Masks\IGPC 1010\IGPC1010 A16 test.png')
 
-del mask
-del new_mask
-del uint8_mask
-
-img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A16.tif')
-print(len(clean_coords))
-
-try:
-    tiff_x = clean_coords[4][0]*512
-    tiff_y = clean_coords[4][1]*512
-    print(tiff_x, tiff_y)
-except IndexError:
-    print("whoops")
-
-tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
-
-plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
-plt.gca().set_frame_on(False)
-
-plt.imshow(tile)
-plt.show()
+# del mask
+# del uint8_mask
+#
+# img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A16.tif')
+#
+# try:
+#     tiff_x = clean_coords[0][0]*512
+#     tiff_y = clean_coords[0][1]*512
+#     print(tiff_x, tiff_y)
+# except IndexError:
+#     print("whoops")
+#
+# tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
+#
+# plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
+# plt.gca().set_frame_on(False)
+#
+# plt.imshow(tile)
+# plt.show()
 
 print("final", time.time()-t)
-
-
-# plt.imshow(mask, cmap='gray')
-#
-# print("imshow", time.time()-t)
-#
-# plt.title('A19 Test')
-# plt.axis('off')
-# #plt.gca().set_frame_on(False)
-# plt.show()
-#
-# print("final", time.time()-t)
