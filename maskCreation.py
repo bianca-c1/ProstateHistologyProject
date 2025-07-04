@@ -15,8 +15,8 @@ import pprint
 
 t = time.time()
 
-df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16 Prostate.csv')
-df2 = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16.csv')
+df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A17 Prostate.csv')
+df2 = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A17.csv')
 
 starter_coords = ast.literal_eval(df.loc[0,'Vertices'])[0]
 
@@ -139,18 +139,11 @@ print("all contours! (grabbing + merging)", time.time()-t)
 ##### cancer detection!! DON'T TOUCH ANYTHING ABOVE THIS !
 #########################
 
-#point = [6900,33000]
-    #[19072,43678]   # this is a point inside G3 contour 2
-    #[17750.0,44300.0] this is a point inside G3 contour 1
+reduced = skimage.measure.block_reduce(mask,(512,512), np.mean)
+uint8_mask = (reduced == 255).astype(np.uint8) * 255
 
-uint8_mask = skimage.measure.block_reduce(mask,(512,512), np.mean)
-#uint8_mask = (uint8_mask - uint8_mask.min()) / (uint8_mask.max() - uint8_mask.min())
-#uint8_mask = np.int8(uint8_mask)
-#uint8_mask = (uint8_mask).astype(np.uint8)
+#np.set_printoptions(suppress=True, threshold=sys.maxsize)
 
-np.set_printoptions(suppress=True, threshold=sys.maxsize)
-print(uint8_mask)
-#print(mask)
 
 coord_list = np.argwhere(uint8_mask == 255)
 
@@ -162,7 +155,6 @@ for i in range(len(coord_list)):
     clean_coords.append(coords)
 
 print(clean_coords)
-#print(tuple(coord_list)[0])
 
 #########################
 ##### showing the image!
@@ -171,24 +163,33 @@ print(clean_coords)
 # img = Image.fromarray(uint8_mask)
 # img.save(r'E:\Users\bchiang\IGPC Raw Histology\Masks\IGPC 1010\IGPC1010 A16 test.png')
 
-# del mask
-# del uint8_mask
+del mask
+del uint8_mask
+
+img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A17.tif')
+
+try:
+    tiff_y = clean_coords[0][0]*512
+    tiff_x = clean_coords[0][1]*512
+    print(tiff_x, tiff_y)
+except IndexError:
+    print("whoops")
+
+tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
+
+plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
+plt.gca().set_frame_on(False)
+
+plt.imshow(tile)
+plt.show()
+
+# plt.imshow(uint8_mask, cmap='gray')
 #
-# img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A16.tif')
+# print("imshow", time.time()-t)
 #
-# try:
-#     tiff_x = clean_coords[0][0]*512
-#     tiff_y = clean_coords[0][1]*512
-#     print(tiff_x, tiff_y)
-# except IndexError:
-#     print("whoops")
-#
-# tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
-#
-# plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
-# plt.gca().set_frame_on(False)
-#
-# plt.imshow(tile)
+# plt.title('Test')
+# plt.axis('off')
+# #plt.gca().set_frame_on(False)
 # plt.show()
 
 print("final", time.time()-t)
