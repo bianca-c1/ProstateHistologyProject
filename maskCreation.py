@@ -8,17 +8,20 @@ import ast
 import time
 from scipy.spatial import distance
 import math
-import Utils
+import MaskUtils
 from PIL import Image
 import sys
-import pprint
 
-t = time.time()
 
-df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A17 Prostate.csv')
-df2 = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A17.csv')
+######################
+##### Setting Up! #####
+######################
 
-starter_coords = ast.literal_eval(df.loc[0,'Vertices'])[0]
+
+prostate_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16 Prostate.csv')
+contour_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16.csv')
+
+starter_coords = ast.literal_eval(prostate_df.loc[0, 'Vertices'])[0]
 
 max_xvalue = int(float(starter_coords['X']))
 max_yvalue = int(float(starter_coords['Y']))
@@ -26,12 +29,12 @@ max_yvalue = int(float(starter_coords['Y']))
 # get the prostate contour + make the mask border
 prostate_points = []
 
-for row in range(len(df)):
+for row in range(len(prostate_df)):
 
     vertices_list = []
     for i in range(6):
         col_name = 'Vertices' if i == 0 else f'Vertices{i+1}'
-        value = ast.literal_eval(df.loc[row, col_name])
+        value = ast.literal_eval(prostate_df.loc[row, col_name])
         vertices_list = vertices_list + value
 
     for d in vertices_list:
@@ -50,9 +53,6 @@ padding = 4000
 # x and y have to be flipped !!! idk why
 mask = np.zeros((max_yvalue+padding,max_xvalue+padding), dtype = np.uint8)
 
-# PROSTATE MASK + DIMENSIONS TIME
-print("mask dimensions", time.time() - t)
-
 
 
 ######################################################
@@ -60,7 +60,7 @@ print("mask dimensions", time.time() - t)
 ######################################################
 
 # groupby separates the df by annotation name (ex. G3 and Atrophy for A16)
-grouped = df2.groupby('Annotation Name')
+grouped = contour_df.groupby('Annotation Name')
 
 ## MAIN LOOP
 # loops as many times as there are types of annotations (2 for A16, 6 for A17)
@@ -68,7 +68,7 @@ for annotation_name, grouped_df in grouped:
 
     # skip anything that isn't actually cancer
     if annotation_name == "Atrophy" or annotation_name == "PIN" or annotation_name == "EPE" or annotation_name == "Margin" or annotation_name == "Inflammation":
-        continue
+        continue        # need to comment this out later when you fix the code
 
     else:
         # clears for every type of annotation
@@ -133,17 +133,16 @@ for annotation_name, grouped_df in grouped:
             contour = np.array(r, dtype=np.int32).reshape((-1, 1, 2))
             cv2.fillPoly(mask, [contour], color=(255, 255, 255))
 
-print("all contours! (grabbing + merging)", time.time()-t)
 
 #########################
 ##### cancer detection!! DON'T TOUCH ANYTHING ABOVE THIS !
 #########################
 
+# downsample the image (each pixel value of the new image is the mean of a 512x512 tile of the og image)
 reduced = skimage.measure.block_reduce(mask,(512,512), np.mean)
 uint8_mask = (reduced == 255).astype(np.uint8) * 255
 
 #np.set_printoptions(suppress=True, threshold=sys.maxsize)
-
 
 coord_list = np.argwhere(uint8_mask == 255)
 
@@ -154,8 +153,6 @@ for i in range(len(coord_list)):
     coords = [x, y]
     clean_coords.append(coords)
 
-print(clean_coords)
-
 #########################
 ##### showing the image!
 #########################
@@ -163,6 +160,7 @@ print(clean_coords)
 # img = Image.fromarray(uint8_mask)
 # img.save(r'E:\Users\bchiang\IGPC Raw Histology\Masks\IGPC 1010\IGPC1010 A16 test.png')
 
+# to save memory
 del mask
 del uint8_mask
 
@@ -182,14 +180,3 @@ plt.gca().set_frame_on(False)
 
 plt.imshow(tile)
 plt.show()
-
-# plt.imshow(uint8_mask, cmap='gray')
-#
-# print("imshow", time.time()-t)
-#
-# plt.title('Test')
-# plt.axis('off')
-# #plt.gca().set_frame_on(False)
-# plt.show()
-
-print("final", time.time()-t)
