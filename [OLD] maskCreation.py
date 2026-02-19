@@ -8,18 +8,16 @@ import ast
 import time
 from scipy.spatial import distance
 import math
-import MaskUtils
 from PIL import Image
 import sys
-
+import MaskUtils
 
 ######################
 ##### Setting Up! #####
 ######################
 
-
-prostate_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16 Prostate.csv')
-contour_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 1010\IGPC1010 A16.csv')
+prostate_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 2014\IGPC-2_014 A19-2 DEEPER Prostate.csv')
+contour_df = pd.read_csv(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 2014\IGPC-2_014 A19-2 DEEPER.csv')
 
 starter_coords = ast.literal_eval(prostate_df.loc[0, 'Vertices'])[0]
 
@@ -139,44 +137,45 @@ for annotation_name, grouped_df in grouped:
 #########################
 
 # downsample the image (each pixel value of the new image is the mean of a 512x512 tile of the og image)
-reduced = skimage.measure.block_reduce(mask,(512,512), np.mean)
-uint8_mask = (reduced == 255).astype(np.uint8) * 255
-
-#np.set_printoptions(suppress=True, threshold=sys.maxsize)
-
-coord_list = np.argwhere(uint8_mask == 255)
-
-clean_coords = []
-for i in range(len(coord_list)):
-    x = tuple(coord_list)[i][0]
-    y = tuple(coord_list)[i][1]
-    coords = [x, y]
-    clean_coords.append(coords)
+# reduced = skimage.measure.block_reduce(mask,(512,512), np.mean)
+# uint8_mask = (reduced == 255).astype(np.uint8) * 255
+#
+#
+# coord_list = np.argwhere(uint8_mask == 255)
+#
+# clean_coords = []
+# for i in range(len(coord_list)):
+#     x = tuple(coord_list)[i][0]
+#     y = tuple(coord_list)[i][1]
+#     coords = [x, y]
+#     clean_coords.append(coords)
 
 #########################
 ##### showing the image!
 #########################
 
-# img = Image.fromarray(uint8_mask)
-# img.save(r'E:\Users\bchiang\IGPC Raw Histology\Masks\IGPC 1010\IGPC1010 A16 test.png')
+img = Image.fromarray(mask)
+img.save(r'E:\Users\bchiang\IGPC Raw Histology\Masks\IGPC 2014\IGPC-2_014 A19-2 DEEPER.png')
 
 # to save memory
 del mask
-del uint8_mask
+#del uint8_mask
 
-img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A17.tif')
+# img = tiff.imread(r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A17.tif')
+#
+# try:
+#     tiff_y = clean_coords[0][0]*512
+#     tiff_x = clean_coords[0][1]*512
+#     print(tiff_x, tiff_y)
+# except IndexError:
+#     print("whoops")
+#
+# tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
 
-try:
-    tiff_y = clean_coords[0][0]*512
-    tiff_x = clean_coords[0][1]*512
-    print(tiff_x, tiff_y)
-except IndexError:
-    print("whoops")
-
-tile = img[tiff_y:tiff_y+512, tiff_x:tiff_x+512]
-
-plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
-plt.gca().set_frame_on(False)
-
-plt.imshow(tile)
-plt.show()
+# use the below stuff for showing the tile you open
+#
+# plt.figure(figsize = (512 / 100, 512 / 100), dpi = 100)
+# plt.gca().set_frame_on(False)
+#
+# plt.imshow(tile)
+# plt.show()

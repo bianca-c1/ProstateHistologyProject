@@ -4,6 +4,8 @@ import locale
 #sys.path.append(r"D:\Users\rau\Code\ImageQuizzer\ImageQuizzer\Code\Utilities")
 from UtilsIOXml import UtilsIOXml
 from lxml import etree
+import os
+from MaskUtils import MaskUtils
 
 locale.setlocale(locale.LC_ALL, '')
 sDelimiter = ';' if locale.localeconv()['decimal_point'] == ',' else ','
@@ -11,9 +13,12 @@ lls = [['edytor poranka PN', '1/04/2016', '15:00'],
        ['edytor PN 2', '2/04/2016', '08:30'],
        ['edytor PN noc', '3/04/2016', '22:00']]
 
+#
+#vertices_path = r"E:\Users\bchiang\IGPC Raw Histology\IGPC 2012"
+#paths = MaskUtils.getPaths(vertices_path, ".xml")
+
 # CHANGE THIS TO THE DIRECTORY AND FILENAME YOU SAVED THE XML FILE
-sXmlPath = r'E:\Users\bchiang\IGPC Raw Histology\IGPC 2014\IGPC-2_014 A16-1.xml'
-#sXmlPath = r'E:\Users\bchiang\IGPC Raw Histology\IGPC 1010\IGPC-1010 A16.xml'
+sXmlPath = r'E:\Users\bchiang\IGPC Raw Histology\IGPC 2012\Prostate\IGPC-2_012 A21-1.xml'
 
 oXML = UtilsIOXml()
 
@@ -21,7 +26,7 @@ oXML = UtilsIOXml()
 oXML.OpenXml(sXmlPath, 'Annotations')   #Session
 xSession = oXML.GetRootNode()
 
-annotations = oXML.GetChildren(xSession, 'Annotation')  #lxPages = ... Page
+annotations = oXML.GetChildren(xSession, 'Annotation')
 # ann_att = oXML.GetListOfNodeAttributes(annotations[0])
 # print(ann_att)
 
@@ -30,48 +35,9 @@ lsHeaders = ['Annotation Id', 'Annotation Name', 'Region', 'Length', 'Area', 'Le
 
 
 # CHANGE THIS TO THE FILENAME YOU WANT TO SAVE THE OUTPUT CSV FILE
-with open(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 2014\IGPC-2_014 A16-1.csv', 'w', newline="") as fID:
+with open(r'E:\Users\bchiang\IGPC Raw Histology\Vertices\IGPC 2012\IGPC-2_012 A21-1 Prostate.csv', 'w', newline="") as fID:
     writer = csv.writer(fID, delimiter=sDelimiter)
     writer.writerow(lsHeaders)
-
-    # for xPage in annotations:   # loop through all children under annotation
-    #
-    #     sId = oXML.GetValueOfNodeAttribute(annotations, 'Id')
-    #     sName = oXML.GetValueOfNodeAttribute(annotations, 'Name')
-    #
-    #     sAtt = oXML.GetValueOfNodeAttribute(xPage, 'Attributes')
-    #     sRegions = oXML.GetValueOfNodeAttribute(xPage, 'Regions')
-    #
-    #     lxQuestionSet = oXML.GetChildren(xPage, 'Regions')
-    #
-    #     for xQuestionSet in lxQuestionSet:
-    #         #sQuestionSetID = oXML.GetValueOfNodeAttribute(xQuestionSet, 'ID')
-    #
-    #         sID = oXML.GetValueOfNodeAttribute(xPage, 'Id')
-    #         sLength = oXML.GetValueOfNodeAttribute(xPage, 'Length')
-    #         sArea = oXML.GetValueOfNodeAttribute(xPage, 'Area')
-    #         sLengthMic = oXML.GetValueOfNodeAttribute(xPage, 'LengthMicrons')
-    #         sAreaMic = oXML.GetValueOfNodeAttribute(xPage, 'AreaMicrons')
-    #
-    #         lxQuestion = oXML.GetChildren(xQuestionSet, 'Region')
-    #
-    #         for xQuestion in lxQuestion:
-    #             # sQuestionDescriptor = oXML.GetValueOfNodeAttribute(xQuestion, 'Descriptor')
-    #             # sQuestionType = oXML.GetValueOfNodeAttribute(xQuestion, 'Type')
-    #
-    #             sVertices = oXML.GetValueOfNodeAttribute(xQuestion, 'Vertices')
-    #
-    #             lxOption = oXML.GetChildren(xQuestion, 'Option')
-                
-                # for xOption in lxOption:
-                #     sOption = oXML.GetDataInNode(xOption)
-                #
-                #     lxResponse = oXML.GetChildren(xOption, 'Response')
-                    
-                    # for xResponse in lxResponse:
-                    #     sResponseLoginTime = oXML.GetValueOfNodeAttribute(xResponse, 'LoginTime')
-                    #     sResponseTime = oXML.GetValueOfNodeAttribute(xResponse, 'ResponseTime')
-                    #     sResponse = oXML.GetDataInNode(xResponse)
 
     count = 0
     for i in annotations:       # loop through every annotation (1-13, each with their own regions)
